@@ -1,21 +1,22 @@
 import { Dimensions, Image, StyleSheet, Text, View, TouchableOpacity } from 'react-native'
 
-const Book = ({onPress}) => {
+const Book = ({ onPress, title, price, discountRate, coverImageUrl }) => {
     return (
-        <TouchableOpacity 
-        activeOpacity={0.8} 
-        style={styles.container}
-        onPress={onPress}
+        <TouchableOpacity
+            activeOpacity={0.8}
+            style={styles.container}
+            onPress={onPress}
         >
             <Image
-                style={styles.thumbnail}
-                source={require('../../assets/placeholder.png')}
+                style={styles.coverImage}
+                source={{ uri: coverImageUrl }}
+                loadingIndicatorSource={require('../../assets/placeholder.png')}
             />
             <View style={styles.textContent}>
-                <Text>레이블라우스</Text>
+                <Text style={styles.title}>{title}</Text>
                 <View style={styles.bottomRow}>
-                    <Text style={styles.discount}>10%</Text>
-                    <Text>57,600원</Text>
+                    <Text style={styles.discountRate}>{discountRate}%</Text>
+                    <Text style={styles.price}>{price.toLocaleString()}원</Text>
                 </View>
             </View>
         </TouchableOpacity>
@@ -27,9 +28,10 @@ export default Book
 const styles = StyleSheet.create({
     container: {
         gap: 4,
-        width: Dimensions.get('window').width /2 - 1,
+        width: 180 + ((Dimensions.get('window').width % 180) / parseInt(Dimensions.get('window').width / 180)),
+        // flexGrow: 1
     },
-    thumbnail: {
+    coverImage: {
         height: 200,
         width: "100%",
         resizeMode: 'cover'
@@ -39,13 +41,19 @@ const styles = StyleSheet.create({
         padding: 10,
         width: '100%'
     },
+    title: {
+        fontWeight: 'bold'
+    },
     bottomRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         width: '100%'
     },
-    discount: {
+    discountRate: {
         color: 'red',
         fontWeight: 700
+    },
+    price: {
+        fontWeight: 'bold'
     }
 })

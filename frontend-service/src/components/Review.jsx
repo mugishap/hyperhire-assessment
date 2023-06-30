@@ -3,8 +3,28 @@ import { Image, StyleSheet, Text, View } from 'react-native'
 import { Button, IconButton, MD3Colors } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
+const hardcodedReplies = [
+    {
+        _id: 'replyId1',
+        user: {
+            _id: 'userId1',
+            name: 'User1',
+            profile: 'https://picsum.photos/100'
+        },
+        content: 'Lorem Ipsum is simply dummy text of the printing and typesetting industry.',
+        likes: 5,
+    }
+]
+
+const hardcodedUser = {
+    _id: 'userId1',
+    name: 'User1',
+    profile: 'https://picsum.photos/100'
+}
+
+
 const Review = (props) => {
-    const { isReply = false, user, content, likes, replies = [] } = props || {}
+    const { isReply = false, user, content, likes = 0, replies = [] } = props || {}
     const [isLiked, setIsLiked] = useState(false)
     return (
         <View style={styles.container}>
@@ -39,7 +59,7 @@ const Review = (props) => {
                         icon={!isLiked ? "cards-heart-outline" : "cards-heart"} textColor='#AFB9CA'
                         onPress={() => { setIsLiked(!isLiked) }}
                     >
-                        {likes}
+                        {Number(likes) + (isLiked ? 1 : 0)}
                     </Button>
                     {
                         !isReply && <Button

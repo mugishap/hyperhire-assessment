@@ -1,12 +1,14 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, ScrollView, Image, Dimensions } from 'react-native'
 import Review from '../components/Review';
+import { axios } from '../utils/axios.config';
+import { Button, IconButton, TextInput } from 'react-native-paper';
 
 const bookDetails = {
-    thumbnail_url: 'https://picsum.photos/400',
+    coverImageUrl: 'https://picsum.photos/400',
     title: 'Book Title',
     description: `Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.`,
-    discount: 0.1,
+    discountRate: 0.1,
     price: 56700,
     reviews: [
         {
@@ -35,45 +37,94 @@ const bookDetails = {
 }
 
 const Book = ({ navigation, route }) => {
-    const { title, _id } = route.params;
+    const { _id, title, price, discountRate, description, coverImageUrl, } = route.params;
+    const [reviews, setReviews] = useState([])
+    const [isLoadingReviews, setIsLoadingReviews] = useState(true)
+
+    const fetchReviews = async () => {
+        try {
+            console.log("fetching reviews", `/get-reviews/${_id}`)
+            const { data } = await axios.get(`/get-reviews/${_id}`)
+            console.log(JSON.stringify(data, null, 2))
+            if (data.success) setReviews(data.data.reviews)
+        } catch (e) {
+            console.log("ERROR: ", e.message)
+        } finally {
+            setIsLoadingReviews(false)
+        }
+    }
 
     useEffect(() => {
         navigation.setOptions({
-            title: title
+            title: title.length > 25 ? title.slice(0, 25) + '...' : title
         })
         console.log(Dimensions.get('window').width)
+        fetchReviews()
     }, [])
 
     return (
-        <ScrollView style={styles.container}>
-            <Image
-                // source={{
-                //     uri: bookDetails.thumbnail_url
-                // }}
-                source={require('../../assets/placeholder.png')}
-                loadingIndicatorSource={require('../../assets/placeholder.png')}
-                style={styles.thumbnail}
-                alt={bookDetails.title + ' image'}
-            />
-            <View style={styles.bookDetails}>
-                <Text style={styles.title}>{bookDetails.title}</Text>
-                <Text style={styles.description}>{bookDetails.description}</Text>
-                <View style={styles.priceBar}>
-                    <Text style={styles.discount}>{bookDetails.discount * 100}%</Text>
-                    <Text style={styles.price}>{bookDetails.price.toLocaleString()}로</Text>
+        <ScrollView contentContainerStyle={styles.container}>
+            <View style={styles.bookDetailSection}>
+                <Image
+                    // source={{
+                    //     uri: bookDetails.coverImage_url
+                    // }}
+                    source={{ uri: coverImageUrl }}
+                    // source={require('../../assets/placeholder.png')}
+                    loadingIndicatorSource={require('../../assets/placeholder.png')}
+                    style={styles.coverImage}
+                    alt={title + ' image'}
+                />
+                <View style={styles.bookDetails}>
+                    <Text style={styles.title}>{title}</Text>
+                    <Text style={styles.description}>{description}</Text>
+                    <View style={styles.priceBar}>
+                        <Text style={styles.discountRate}>{discountRate}%</Text>
+                        <Text style={styles.price}>{price.toLocaleString()}로</Text>
+                    </View>
                 </View>
             </View>
-            <View style={styles.reviews}>
-                {
-                    bookDetails.reviews.map((review, id) => {
-                        return (
-                            <Review
-                                key={`review-${id}`}
-                                {...review}
-                            />
-                        )
-                    })
-                }
+            <View style={styles.reviewSection}>
+                <View style={styles.reviews}>
+                    {
+                        isLoadingReviews && <Text style={styles.notifyText}>Loading Reviews...</Text>
+                    }
+                    {
+                        !isLoadingReviews && reviews.length === 0 && <Text style={styles.notifyText}>No Reviews</Text>
+                    }
+                    {
+                        reviews.map((review, id) => {
+                            return (
+                                <Review
+                                    key={`review-${id}`}
+                                    {...{
+                                        content: review.reviewMessage,
+                                        ...bookDetails.reviews[0],
+                                    }}
+                                />
+                            )
+                        })
+                    }
+                </View>
+                <View style={styles.addReviewContainer}>
+                    <IconButton
+                        icon={'image'}
+                        size={20}
+                        iconColor='#919EB6'
+                        onPress={() => { }}
+                    />
+                    <TextInput
+                        placeholder='댓글을 남겨주세요.'
+                        placeholderTextColor={'#AFB9CA'}
+                        style={styles.addReviewTextField}
+                        underlineColor='transparent'
+                        activeUnderlineColor='transparent'
+                        height={20}
+                    />
+                    <Button onPress={() => { }}>
+                        등록
+                    </Button>
+                </View>
             </View>
         </ScrollView>
     )
@@ -83,11 +134,12 @@ export default Book
 
 const styles = StyleSheet.create({
     container: {
+        alignItems: 'center',
+        flexDirection: Dimensions.get('window').width < 375*2 ? 'column' : 'row',
     },
-    thumbnail: {
-        resizeMode: 'cover',
-        width: Dimensions.get('window').width < 375 ? '100%' : 375,
-        height: 400,
+    bookDetailSection: {
+        maxWidth: 375,
+        width: '100%',
     },
     bookDetails: {
         marginTop: 10,
@@ -95,6 +147,17 @@ const styles = StyleSheet.create({
         gap: 6,
         borderBottomColor: '#eee',
         borderBottomWidth: 1,
+        width: '100%'
+    },
+    reviewSection: {
+        flexDirection: 'column',
+        flexGrow: 1,
+        alignItems: 'center',
+    },
+    coverImage: {
+        resizeMode: 'cover',
+        width: Dimensions.get('window').width < 375 ? '100%' : 375,
+        height: 400,
     },
     title: {
         fontWeight: 'bold',
@@ -109,11 +172,29 @@ const styles = StyleSheet.create({
     price: {
         fontWeight: 'bold',
     },
-    discount: {
+    discountRate: {
         fontWeight: 'bold',
         color: 'red'
     },
     reviews: {
         padding: 10
+    },
+    notifyText: {
+        textAlign: 'center',
+        color: '#c4c4c4'
+    },
+    addReviewContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        height: 30,
+        marginTop: 10,
+        marginBottom: 10,
+        width: '100%',
+    },
+    addReviewTextField: {
+        flexGrow: 1,
+        backgroundColor: 'transparent',
+        borderBottomWidth: 0,
     }
 })

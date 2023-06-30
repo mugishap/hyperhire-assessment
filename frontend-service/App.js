@@ -1,5 +1,5 @@
 import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View } from "react-native";
+import { Dimensions, StyleSheet, Text, View } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import Home from "./src/screens/Home";
@@ -9,9 +9,6 @@ const Stack = createNativeStackNavigator();
 
 export default function App() {
   return (
-    // <View style={styles.container}>
-    //   <Text>Open up App.js to start working on your app!</Text>
-    // </View>
     <NavigationContainer>
       <StatusBar style="auto" />
       <Stack.Navigator>
@@ -39,6 +36,9 @@ export default function App() {
             animation: "slide_from_right",
             contentStyle: {
               backgroundColor: 'white'
+            },
+            headerTitleStyle: {
+              maxWidth: Dimensions.get("window").width - 100,
             }
           }}
         />
